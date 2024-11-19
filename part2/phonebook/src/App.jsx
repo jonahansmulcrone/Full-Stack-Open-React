@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import PersonsForm from './components/PersonForm/PersonsForm'
+import Persons from './components/Persons/Persons'
 
 const App = () => {
   const [persons, setPersons] = useState([
@@ -8,6 +9,7 @@ const App = () => {
     { name: 'Dan Abramov', number: '12-43-234345', id: 3 },
     { name: 'Mary Poppendieck', number: '39-23-6423122', id: 4 }
   ])
+  
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filterName, setFilterName] = useState('')
@@ -24,7 +26,6 @@ const App = () => {
     }
 
     const duplicate = findDuplicateEntry()
-    console.log(duplicate);
 
     if (duplicate) {
       alert(`${newName} is already in the phonebook.`)
@@ -64,7 +65,7 @@ const App = () => {
         handleNewNumberChange={handleNewNumberChange}
       />
       <h2>Numbers</h2>
-      {personsToShow.map(person => <div key={person.name}> {person.name} | {person.number}</div>)}
+      <Persons persons={personsToShow}/>
     </div>
   )
 }
