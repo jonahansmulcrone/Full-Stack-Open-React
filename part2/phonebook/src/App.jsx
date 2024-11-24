@@ -2,19 +2,18 @@ import { useState } from 'react'
 import PersonsForm from './components/PersonForm/PersonsForm'
 import Persons from './components/Persons/Persons'
 import { useEffect } from 'react'
-import axios from 'axios'
+import phoneService from './services/phonebook'
 
 const App = () => {
   const [persons, setPersons] = useState([])
-
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filterName, setFilterName] = useState('')
 
   useEffect(() => {
-    axios.get('http://localhost:3001/persons')
-      .then((res) => {
-        setPersons(res.data)
+    phoneService.getAllPersons()
+      .then((allPersons) => {
+        setPersons(allPersons)
       })
   }, [])
 
@@ -22,19 +21,37 @@ const App = () => {
     event.preventDefault()
 
     const findDuplicateEntry = () => {
-      for (var k = 0; k < persons.length; k++) {
-        if (persons[k].name === newName) {
-          return true
+      if (persons.length > 0) {
+        for (var k = 0; k < persons.length; k++) {
+          if (persons[k].name === newName) {
+            return [true, persons[k].id]
+          } else {
+            return [false, null]
+          }
         }
+      } 
+      else {
+        return [false, null]
       }
     }
 
-    const duplicate = findDuplicateEntry()
+    const [isDuplicate, duplicateId] = findDuplicateEntry()
+    const newPerson = { name: newName, number: newNumber }
 
-    if (duplicate) {
-      alert(`${newName} is already in the phonebook.`)
+    if (isDuplicate) {
+      if (window.confirm(`${newName} is already in the phonebook, replace the old number with a new one?`)) {
+        phoneService.updatePerson(newPerson, duplicateId).then((updatedPerson) => {
+          const updatedPersonsList = persons.filter((n) => n.name !== updatedPerson.name)
+
+          setPersons(updatedPersonsList.concat(updatedPerson))
+          setNewName('')
+          setNewNumber('')
+        })
+      }
     } else {
-      setPersons([...persons, { name: newName, number: newNumber, id: persons.length + 1 }])
+      phoneService.addPerson(newPerson).then((person) => {
+        setPersons([...persons, person])
+      })
       setNewName('')
       setNewNumber('')
     }
@@ -50,6 +67,14 @@ const App = () => {
 
   const handleFilterChange = (event) => {
     setFilterName(event.target.value)
+  }
+
+  const handleDelete = (id, name) => {
+    if (window.confirm(`Are you sure you want to remove ${name} from the phonebook?`)) {
+      phoneService.deletePerson(id).then(() => {
+        setPersons(persons.filter((n) => n.id !== id))
+      })
+    }
   }
 
   const personsToShow = persons.filter((person) => person.name.toLowerCase().includes(filterName.toLowerCase()))
@@ -69,7 +94,7 @@ const App = () => {
         handleNewNumberChange={handleNewNumberChange}
       />
       <h2>Numbers</h2>
-      <Persons persons={personsToShow} />
+      <Persons persons={personsToShow} handleDelete={handleDelete} />
     </div>
   )
 }
