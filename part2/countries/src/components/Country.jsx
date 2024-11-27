@@ -1,7 +1,7 @@
-const Country = ({ country }) => {
+const Country = ({ country, toggleDisplayDetails }) => {
     return (
         <li>
-            {country}
+            {country.name.common} <button onClick={() => toggleDisplayDetails(country)}>Show details</button>
         </li>
     )
 }
