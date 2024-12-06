@@ -1,7 +1,23 @@
 const express = require('express')
+var morgan = require('morgan')
 const app = express()
 
 app.use(express.json())
+app.use(morgan((tokens, request, response) => {
+    let logger = [
+        tokens.method(request, response),
+        tokens.url(request, response),
+        tokens.status(request, response),
+        tokens.res(request, response, 'content-length'), '-',
+        tokens['response-time'](request, response), 'ms ',
+    ].join(' ')
+
+    if (request.body != '') {
+        logger = logger.concat(JSON.stringify(request.body))
+    }
+
+    return logger
+}))
 
 let numbers = [
     {
